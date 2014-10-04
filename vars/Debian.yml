@@ -1,0 +1,6 @@
+---
+iscsi_target:
+  packages: [ iscsi-target ]
+
+  # too generic operating system
+  supported_os: False

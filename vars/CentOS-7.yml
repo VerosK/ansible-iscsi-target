@@ -1,0 +1,8 @@
+---
+iscsi_target:
+  packages: [ targetcli ]
+  services: []
+  implementation: lio
+
+  # confirm OS is supported
+  supported_os: True

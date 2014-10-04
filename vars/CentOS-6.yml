@@ -1,0 +1,8 @@
+---
+iscsi_target:
+  packages: [ scsi-target-utils ]
+  services: [ tgtd ]
+  implementation: tgtd
+
+  # confirm OS is supported
+  supported_os: True

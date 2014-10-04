@@ -1,0 +1,4 @@
+---
+iscsi_target:
+  supported_os: False
+  # too generic operating system

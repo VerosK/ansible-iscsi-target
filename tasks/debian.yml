@@ -1,0 +1,13 @@
+---
+- name: Install  DEB packages
+  apt: name={{item}} state=present cache_valid_time=7200
+  with_items: iscsi_target.packages
+
+- name: Enable ietd target in Debian
+  lineinfile: dest=/etc/default/iscsitarget
+              line='ISCSITARGET_ENABLE=true'
+              regexp='^ISCSITARGET_ENABLE='
+              insertbefore=eof
+              state=present
+  when: iscsi_target.implementation in ['ietd']
+

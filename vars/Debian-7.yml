@@ -1,0 +1,8 @@
+---
+iscsi_target:
+  packages: [ iscsitarget, iscsitarget-dkms ]
+  services: [ iscsitarget ]
+  implementation: ietd
+
+  # confirm OS is supported
+  supported_os: True
