@@ -1,0 +1,54 @@
+---
+# implementation of configuration for iSCSI target
+- name: Debug
+  debug: message={{item}}
+  with_items: iscsi_targets
+
+#targetcli /backstores/fileio create disk01 /iscsi/disk01 1G
+- name: Create backstore
+  shell: targetcli '/backstores/{{ item.mode }}io/{{ item.name }}' status ||
+         targetcli "/backstores/{{ item.mode }}io" create
+        "{{ item.name }}" "{{ item.backing_store }}" "size={{item.size}}" #"
+  with_items: iscsi_targets
+
+# delete
+#targetcli /backstores/fileio delete disk01
+
+#targetcli /iscsi create iqn.2014-10.org.example:storage.target00
+- name: Create target
+  shell: targetcli /iscsi create '{{ iscsi_target_base }}.{{ansible_hostname}}:{{iscsi_target_suffix}}.{{item.name}}'
+  with_items: iscsi_targets
+
+# set IP address
+#targetcli /iscsi/iqn.2014-10.org.example:storage.target00/tpg1/portals create 0.0.0.0
+
+- name: Set listening target IP address
+  shell: targetcli /iscsi/{{ iscsi_target_base }}.{{ansible_hostname}}:{{iscsi_target_suffix}}.{{item.name}}/tpg1/portals create 0.0.0.0
+  with_items: iscsi_targets
+
+# set LUN
+#targetcli /iscsi/iqn.2014-10.org.example:storage.target00/tpg1/luns create /backstores/fileio/disk01 lun=1
+
+- name: Set backstore to LUNs
+  shell: targetcli /iscsi/{{ iscsi_target_base }}.{{ansible_hostname}}:{{iscsi_target_suffix}}.{{item.name}}/tpg1/luns
+        create /backstores/{{ item.mode }}io/{{ item.name }} lun=1
+  with_items: iscsi_targets
+
+# disable auth
+#targetcli /iscsi/iqn.2014-10.org.example:storage.target00/tpg1 set attribute authentication=0
+
+# set auth
+#targetcli /iscsi/iqn.2014-10.org.example:storage.target00/tpg1 set auth userid=foo
+#targetcli /iscsi/iqn.2014-10.org.example:storage.target00/tpg1 set auth password=bar
+- name: Set target username
+  shell: targetcli /iscsi/{{ iscsi_target_base }}.{{ansible_hostname}}:{{iscsi_target_suffix}}.{{item.name}}/tpg1
+         set auth userid={{item.common_auth.userid}}
+  with_items: iscsi_targets
+
+- name: Set target password
+  shell: targetcli /iscsi/{{ iscsi_target_base }}.{{ansible_hostname}}:{{iscsi_target_suffix}}.{{item.name}}/tpg1
+         set auth password={{item.common_auth.password}}
+  with_items: iscsi_targets
+
+- name: Don't forget to save lio config
+  shell: targetctl save

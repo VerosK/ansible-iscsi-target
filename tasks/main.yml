@@ -19,6 +19,14 @@
 - include: debian.yml
   when: ansible_os_family == "Debian"
 
+- name: Enable port 3260 on firewalld
+  firewalld: port=3260/tcp permanent=true state=enabled
+  when: iscsi_target.have_firewalld
+
 - name: Start iscsi service
   service: name={{ item }} state=started enabled=true
   with_items: iscsi_target.services
+
+- name: Configure lio iSCSI
+  include: implementations/lio.yml
+  when: iscsi_target.implementation == 'lio' and iscsi_targets
