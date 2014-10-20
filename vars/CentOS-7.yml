@@ -1,8 +1,8 @@
 ---
 iscsi_target:
   packages: [ targetcli ]
-  services: []
+  services: [ target ]
   implementation: lio
+  have_firewalld: True
 
-  # confirm OS is supported
   supported_os: True

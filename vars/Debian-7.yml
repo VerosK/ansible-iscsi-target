@@ -4,5 +4,4 @@ iscsi_target:
   services: [ iscsitarget ]
   implementation: ietd
 
-  # confirm OS is supported
   supported_os: True
