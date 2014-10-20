@@ -1,8 +1,11 @@
 ---
 # implementation of configuration for iSCSI target
-- name: Debug
+- name: Debug lio
   debug: message={{item}}
   with_items: iscsi_targets
+
+- name: Create /iscsi dir
+  file: path=/iscsi state=directory
 
 #targetcli /backstores/fileio create disk01 /iscsi/disk01 1G
 - name: Create backstore
@@ -21,7 +24,6 @@
 
 # set IP address
 #targetcli /iscsi/iqn.2014-10.org.example:storage.target00/tpg1/portals create 0.0.0.0
-
 - name: Set listening target IP address
   shell: targetcli /iscsi/{{ iscsi_target_base }}.{{ansible_hostname}}:{{iscsi_target_suffix}}.{{item.name}}/tpg1/portals create 0.0.0.0
   with_items: iscsi_targets
@@ -30,12 +32,19 @@
 #targetcli /iscsi/iqn.2014-10.org.example:storage.target00/tpg1/luns create /backstores/fileio/disk01 lun=1
 
 - name: Set backstore to LUNs
-  shell: targetcli /iscsi/{{ iscsi_target_base }}.{{ansible_hostname}}:{{iscsi_target_suffix}}.{{item.name}}/tpg1/luns
-        create /backstores/{{ item.mode }}io/{{ item.name }} lun=1
+  shell: targetcli /iscsi/{{ iscsi_target_base }}.{{ansible_hostname}}:{{iscsi_target_suffix}}.{{item.name}}/tpg1/luns/ ls lun1 || targetcli /iscsi/{{ iscsi_target_base }}.{{ansible_hostname}}:{{iscsi_target_suffix}}.{{item.name}}/tpg1/luns
+        create /backstores/{{ item.mode }}io/{{ item.name }} lun=1 add_mapped_luns=true
   with_items: iscsi_targets
 
 # disable auth
 #targetcli /iscsi/iqn.2014-10.org.example:storage.target00/tpg1 set attribute authentication=0
+
+- name: Require global auth on TPG
+  shell: targetcli /iscsi/{{ iscsi_target_base }}.{{ansible_hostname}}:{{iscsi_target_suffix}}.{{item.name}}/tpg1
+         set attribute demo_mode_write_protect=0 generate_node_acls=1 cache_dynamic_acls=1 authentication=1
+  with_items: iscsi_targets
+
+# WTF: Demo mode settings is applied when  also using autentication without iqn names.
 
 # set auth
 #targetcli /iscsi/iqn.2014-10.org.example:storage.target00/tpg1 set auth userid=foo
@@ -50,5 +59,18 @@
          set auth password={{item.common_auth.password}}
   with_items: iscsi_targets
 
-- name: Don't forget to save lio config
-  shell: targetctl save
+- name: Set Target Aliases
+  shell: targetcli /iscsi/{{ iscsi_target_base }}.{{ansible_hostname}}:{{iscsi_target_suffix}}.{{item.name}}/tpg1
+         set parameter TargetAlias={{item.name}}
+  with_items: iscsi_targets
+
+
+
+# FIXME: LIO handling should be handler by special Python module.
+# TODO:  Write that module.
+
+
+# set parameters TargetAlias=AD data
+# set parameter MaxConnections=2
+# set parameter DataDigest=CRC32C
+# set parameter HeaderDigest=CRC32C

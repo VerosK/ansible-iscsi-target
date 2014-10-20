@@ -1,4 +1,4 @@
 ---
-- name: restart iscsi targets
+- name: Reload iscsi targets
   service: name={{item}} state=restarted
   with_items: iscsi_target.service

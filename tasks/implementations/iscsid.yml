@@ -1,0 +1,6 @@
+---
+- name: Debug
+  debug: message={{item}}
+  with_items: iscsi_targets
+
+#TODO: Write this

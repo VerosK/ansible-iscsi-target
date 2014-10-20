@@ -30,3 +30,6 @@
 - name: Configure lio iSCSI
   include: implementations/lio.yml
   when: iscsi_target.implementation == 'lio' and iscsi_targets
+
+  # iscsiadm -m discovery -t sendtargets -p 192.168.11.101
+  # iscsiadm -m node --login
